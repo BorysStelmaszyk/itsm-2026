@@ -25,6 +25,7 @@ write your own), and read the course package (`README.md`, `PREWORK.md`, `lab1/`
 | `DECISIONS.md` | your reasoning artifact: front matter with the three decisions, three sections, five labels each |
 | `itsmlab.yaml` | lab number, baselines, your repository, the submissions repository, the checker image |
 | `itsmlab.sh`, `itsmlab.ps1` | wrappers that run the checker container |
+| `course-package/` | supplied course material: pre-work, Lab 1 handout, requirements, API contract, checks and decisions template |
 | `specs/` | your specifications, published and receipted before any code |
 | `src/` | your implementation |
 | `.github/workflows/tier-a.yml` | runs the checker on every push and publishes `report.json` as an artifact with a step summary |
