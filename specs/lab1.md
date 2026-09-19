@@ -1,4 +1,4 @@
-<!-- ai-generated: 100% - drafted by Codex from the supplied course requirements, API contract, and checker catalog; student review pending -->
+<!-- ai-generated: 100% - drafted by Codex from the supplied course documents and reviewed by the student -->
 # Lab 1 specification: `svcdesk`
 
 ## 1. Status and source precedence
@@ -14,9 +14,9 @@ The source documents are:
    calculations, and other interface details;
 3. [`CHECKS.md`](../course-package/lab1/CHECKS.md), which supplies the executable acceptance criteria.
 
-When the sources differ in precision, `API.md` governs. Three deliberate contradictions are isolated as decisions
-C1, C2, and C3 in section 4. Their selected values must be recorded in the repository-root `DECISIONS.md`, reflected
-by the implementation, and verified for consistency before submission.
+When the sources differ in precision, `API.md` governs. Three deliberate contradictions are resolved as decisions
+C1, C2, and C3 in section 4. Their selected values are recorded in the repository-root `DECISIONS.md`, must be
+reflected by the implementation, and must be verified for consistency before submission.
 
 ## 2. Purpose and scope
 
@@ -48,15 +48,14 @@ Lab 1 has no authentication, authorization, pagination, public-holiday calendar,
 
 ## 4. Decision register
 
-The product requirements contain three intentional conflicts. Either listed outcome is conformant, but mixed or
-third outcomes are not. These decisions remain open in this specification draft and must be resolved before the
-corresponding behavior is implemented.
+The product requirements contain three intentional conflicts. Either documented outcome would be conformant, but
+the student selected the following behaviors before implementation.
 
-| decision | conflicting requirements | admissible values | observable difference |
+| decision | conflicting requirements | selected value | required behavior |
 |---|---|---|---|
-| C1: P1 SLA clock | R-13 pauses all clocks outside business hours; R-14 makes P1 continuous | `wallclock` or `business` | Both P1 targets use continuous elapsed time, or both use business hours. P2-P4 always use business hours. |
-| C2: reopening closed tickets | R-09 makes a closed ticket immutable; R-10 permits a closed ticket to reopen for seven days | `immutable` or `reopen` | A closed ticket always rejects reopen with 409, or may reopen within the window. |
-| C3: VIP priority | R-05 makes the matrix the only priority input; R-06 raises VIP tickets to at least P2 | `matrix` or `vip` | A low-impact, low-urgency VIP ticket remains P4, or is raised to P2. |
+| C1: P1 SLA clock | R-13 pauses all clocks outside business hours; R-14 makes P1 continuous | `wallclock` | Both P1 targets use continuous elapsed time. P2-P4 use business hours. |
+| C2: reopening closed tickets | R-09 makes a closed ticket immutable; R-10 permits a closed ticket to reopen for seven days | `immutable` | A closed ticket always rejects reopen with 409; a resolved ticket may reopen within seven days. |
+| C3: VIP priority | R-05 makes the matrix the only priority input; R-06 raises VIP tickets to at least P2 | `vip` | A VIP ticket calculated as P3 or P4 is raised to P2; P1 and P2 remain unchanged. |
 
 The checker identifies these outcomes through checks L1-CORE-2.41, L1-CORE-2.35, and L1-CORE-2.46 respectively.
 The declared values in `DECISIONS.md` must equal the observed values.
@@ -285,4 +284,5 @@ Before implementation files are added under `src/`:
 1. a student reviews this specification and corrects any misunderstanding;
 2. this file is committed and pushed to `main`;
 3. the `specs` receipt is requested and accepted by the course bot;
-4. C1, C2, and C3 are resolved, documented in `DECISIONS.md`, and reflected in the implementation plan.
+4. C1, C2, and C3 are resolved as `wallclock`, `immutable`, and `vip`, documented in `DECISIONS.md`, and reflected
+   in the implementation plan.
