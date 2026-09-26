@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from typing import Annotated, Any
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, Header, Query
+from fastapi import Body, Depends, FastAPI, Header, Query
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
@@ -19,6 +19,7 @@ from .clock import (
     request_now,
     resolution_uses_business_clock,
 )
+from .dora import DoraValidationError, compute_metrics
 from .models import TicketInput
 from .storage import TicketStore
 
@@ -102,6 +103,41 @@ def calculate_priority(impact: int, urgency: int, vip: bool) -> str:
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "svcdesk"}
+
+
+@app.post("/dora/metrics")
+def dora_metrics(payload: Annotated[Any, Body()]) -> dict[str, Any]:
+    try:
+        return compute_metrics(payload)
+    except DoraValidationError as exc:
+        raise ApiError(422, "invalid_dora_log", str(exc)) from exc
+
+
+@app.get("/dora/ticket-events")
+def ticket_events() -> list[dict[str, Any]]:
+    phase_fields = (
+        ("created", "created_at", "new"),
+        ("acknowledged", "acknowledged_at", "acknowledged"),
+        ("resolved", "resolved_at", "resolved"),
+        ("closed", "closed_at", "closed"),
+    )
+    phase_order = {phase: index for index, (phase, _, _) in enumerate(phase_fields)}
+    result: list[dict[str, Any]] = []
+    for ticket in store.list(None, None):
+        for phase, field, state_at_instant in phase_fields:
+            instant = ticket[field]
+            if instant is not None:
+                result.append(
+                    {
+                        "ticket_id": ticket["id"],
+                        "at": instant,
+                        "phase": phase,
+                        "priority": ticket["priority"],
+                        "state": state_at_instant,
+                    }
+                )
+    result.sort(key=lambda item: (parse_instant(item["at"]), item["ticket_id"], phase_order[item["phase"]]))
+    return result
 
 
 @app.post("/tickets", status_code=201)
