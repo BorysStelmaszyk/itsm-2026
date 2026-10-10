@@ -1,0 +1,16 @@
+# ai-generated: 80% - Codex mapped the svcdesk metrics endpoint to the ServiceMonitor schema
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: svcdesk
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: svcdesk
+  namespaceSelector:
+    any: true
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 5s

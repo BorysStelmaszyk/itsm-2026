@@ -1,0 +1,9 @@
+# ai-generated: 65% - based on the course template; the resource cap and selectors are explicit lab decisions
+prometheus:
+  prometheusSpec:
+    retention: 2h
+    resources:
+      limits:
+        memory: 1Gi
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
