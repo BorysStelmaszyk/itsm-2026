@@ -1,0 +1,72 @@
+# ai-generated: 90% - Codex wrote edge and sub-threshold cases to kill the published alert mutants
+rule_files:
+  - alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  - name: fast alert fires on the first evaluation after for
+    interval: 1m
+    input_series:
+      - series: 'http_server_request_duration_seconds_count{job="svcdesk", instance="svcdesk:8080", http_request_method="GET", http_route="/kb/search", http_response_status_code="200"}'
+        values: '0+480x20'
+      - series: 'http_server_request_duration_seconds_count{job="svcdesk", instance="svcdesk:8080", http_request_method="GET", http_route="/kb/search", http_response_status_code="502"}'
+        values: '0+120x20'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KbSearchAvailabilityBurnFast
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: KbSearchAvailabilityBurnFast
+        exp_alerts:
+          - exp_labels:
+              service: svcdesk
+              slo: availability
+              severity: P1
+            exp_annotations:
+              summary: "Knowledge-base search is rapidly exhausting its availability budget"
+
+  - name: fast alert stays quiet below its exact threshold
+    interval: 1m
+    input_series:
+      - series: 'http_server_request_duration_seconds_count{job="svcdesk", instance="svcdesk:8080", http_request_method="GET", http_route="/kb/search", http_response_status_code="200"}'
+        values: '0+534x30'
+      - series: 'http_server_request_duration_seconds_count{job="svcdesk", instance="svcdesk:8080", http_request_method="GET", http_route="/kb/search", http_response_status_code="502"}'
+        values: '0+66x30'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: KbSearchAvailabilityBurnFast
+        exp_alerts: []
+
+  - name: slow alert fires on the first evaluation after for
+    interval: 1m
+    input_series:
+      - series: 'http_server_request_duration_seconds_count{job="svcdesk", instance="svcdesk:8080", http_request_method="GET", http_route="/kb/search", http_response_status_code="200"}'
+        values: '0+552x20'
+      - series: 'http_server_request_duration_seconds_count{job="svcdesk", instance="svcdesk:8080", http_request_method="GET", http_route="/kb/search", http_response_status_code="502"}'
+        values: '0+48x20'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KbSearchAvailabilityBurnSlow
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: KbSearchAvailabilityBurnSlow
+        exp_alerts:
+          - exp_labels:
+              service: svcdesk
+              slo: availability
+              severity: P2
+            exp_annotations:
+              summary: "Knowledge-base search is steadily exhausting its availability budget"
+
+  - name: slow alert stays quiet below its exact threshold
+    interval: 1m
+    input_series:
+      - series: 'http_server_request_duration_seconds_count{job="svcdesk", instance="svcdesk:8080", http_request_method="GET", http_route="/kb/search", http_response_status_code="200"}'
+        values: '0+570x30'
+      - series: 'http_server_request_duration_seconds_count{job="svcdesk", instance="svcdesk:8080", http_request_method="GET", http_route="/kb/search", http_response_status_code="502"}'
+        values: '0+30x30'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: KbSearchAvailabilityBurnSlow
+        exp_alerts: []

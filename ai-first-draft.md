@@ -3,11 +3,11 @@ lab3_first_draft:
   source: ai
   tool: "OpenAI Codex (GPT-5), desktop app, 2026-10-10"
   ladder: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
-  verdict: TODO
-  evidence: {p99_seconds: TODO, bucket: [TODO, TODO], relative_width: TODO}
+  verdict: refuted
+  evidence: {p99_seconds: 0.1758, bucket: [0.1, 0.25], relative_width: 0.853}
 lab3_flawed_ladder:
   verdict: refuted
-  evidence: {p99_seconds: TODO, bucket: [TODO, TODO], relative_width: TODO}
+  evidence: {p99_seconds: 0.1758, bucket: [0.04, 0.5], relative_width: 2.617}
 ---
 <!-- ai-generated: 70% - the assistant answer is verbatim; the student will own the measured verdicts and arithmetic -->
 
@@ -52,12 +52,18 @@ after choosing the SLO window and operational response policy.
 
 ## Verdict on the draft ladder
 
-TODO after the first published measurement.
+Refuted. The published `load 3` measurement for login `borysstelmaszyk` gave p99 = 0.1758 s. The draft ladder
+places that value in `(0.1, 0.25]`, whose relative width is `(0.25 - 0.1) / 0.1758 = 0.853`. This is well above
+the M-11 limit of 0.20, so it does not resolve the measured p99.
 
 ## The draft alert rule
 
-TODO after the SLO and final multiwindow alert policy are defined.
+I kept the two-window `and` condition, the 14.4 fast-burn factor, the `/kb/search` route restriction, and the
+service/SLO/severity labels because they express the intended fast-budget page without mixing other traffic into
+the ratio. I changed the bad-event definition from every non-2xx response to 5xx responses so that it matches the
+availability SLI in `slo.md`, used `for: 5m`, and added a 6 h / 30 min rule at burn rate 6 for a slower P2 signal.
 
 ## Verdict on the instructor's flawed ladder
 
-TODO after the first published measurement.
+Refuted. The same p99 = 0.1758 s falls in `(0.04, 0.5]`. Its relative width is
+`(0.5 - 0.04) / 0.1758 = 2.617`, over thirteen times the permitted 0.20, so the ladder is blind to the slow mode.

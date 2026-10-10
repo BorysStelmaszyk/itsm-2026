@@ -2,14 +2,17 @@
 from __future__ import annotations
 
 import os
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Annotated, Any
 from uuid import uuid4
 
-from fastapi import Body, Depends, FastAPI, Header, Query
+import httpx
+from fastapi import Body, Depends, FastAPI, Header, Query, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
+from prometheus_client import CONTENT_TYPE_LATEST, Histogram, generate_latest
 
 from .clock import (
     due_instants,
@@ -33,6 +36,39 @@ class ApiError(Exception):
 
 store = TicketStore(os.getenv("SVCDESK_DB", "svcdesk.db"))
 
+REQUEST_DURATION = Histogram(
+    "http_server_request_duration_seconds",
+    "Duration of HTTP server requests in seconds.",
+    ("http_request_method", "http_route", "http_response_status_code"),
+    buckets=(
+        0.005,
+        0.01,
+        0.02,
+        0.03,
+        0.04,
+        0.05,
+        0.075,
+        0.1,
+        0.125,
+        0.15,
+        0.16,
+        0.17,
+        0.18,
+        0.19,
+        0.2,
+        0.225,
+        0.25,
+        0.3,
+        0.4,
+        0.5,
+        0.75,
+        1.0,
+        2.5,
+        5.0,
+        10.0,
+    ),
+)
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -41,6 +77,21 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="svcdesk", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def observe_request(request: Request, call_next):
+    started = time.perf_counter()
+    response = await call_next(request)
+    if request.url.path != "/metrics":
+        route = request.scope.get("route")
+        route_template = getattr(route, "path", "unmatched")
+        REQUEST_DURATION.labels(
+            http_request_method=request.method,
+            http_route=route_template,
+            http_response_status_code=str(response.status_code),
+        ).observe(time.perf_counter() - started)
+    return response
 
 
 @app.exception_handler(ApiError)
@@ -103,6 +154,27 @@ def calculate_priority(impact: int, urgency: int, vip: bool) -> str:
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "svcdesk"}
+
+
+@app.get("/metrics", include_in_schema=False)
+def metrics() -> Response:
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+@app.get("/kb/search")
+async def kb_search(q: Annotated[str, Query(min_length=1, max_length=200)]) -> dict[str, Any]:
+    base_url = os.getenv("KB_INDEX_URL", "http://kb-index:8080").rstrip("/")
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            upstream = await client.get(f"{base_url}/search", params={"q": q})
+        if upstream.status_code != 200:
+            raise ApiError(502, "upstream_unavailable", "knowledge-base index is unavailable")
+        payload = upstream.json()
+        return {"query": q, "hits": payload["hits"]}
+    except ApiError:
+        raise
+    except (httpx.HTTPError, KeyError, ValueError) as exc:
+        raise ApiError(502, "upstream_unavailable", "knowledge-base index is unavailable") from exc
 
 
 @app.post("/dora/metrics")

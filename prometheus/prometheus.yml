@@ -1,0 +1,12 @@
+# ai-generated: 10% - adapted from the course template with the required svcdesk scrape job
+global:
+  scrape_interval: 5s
+  evaluation_interval: 15s
+
+rule_files:
+  - alerts.yml
+
+scrape_configs:
+  - job_name: svcdesk
+    static_configs:
+      - targets: ["svcdesk:8080"]
