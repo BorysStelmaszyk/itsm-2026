@@ -1,0 +1,47 @@
+# ai-generated: 90% - Codex drafted the symptom rules from the course specification; the student owns the thresholds
+groups:
+  - name: shop-symptoms
+    rules:
+      - alert: CheckoutErrorRate
+        expr: |
+          sum(rate(traces_span_metrics_calls_total{service_name="checkout", span_kind="SPAN_KIND_SERVER", status_code="STATUS_CODE_ERROR"}[5m]))
+          /
+          sum(rate(traces_span_metrics_calls_total{service_name="checkout", span_kind="SPAN_KIND_SERVER"}[5m]))
+          > 0.05
+        for: 2m
+        labels:
+          service: checkout
+          severity: P1
+          cluster: shop
+        annotations:
+          summary: "More than 5% of checkout requests are failing"
+
+      - alert: CheckoutLatencyHigh
+        expr: |
+          histogram_quantile(
+            0.99,
+            sum by (le) (
+              rate(traces_span_metrics_duration_milliseconds_bucket{service_name="checkout", span_kind="SPAN_KIND_SERVER"}[5m])
+            )
+          ) > 2000
+        for: 2m
+        labels:
+          service: checkout
+          severity: P1
+          cluster: shop
+        annotations:
+          summary: "Checkout p99 latency exceeds two seconds"
+
+      - alert: PaymentErrorRate
+        expr: |
+          sum(rate(traces_span_metrics_calls_total{service_name="payment", span_kind="SPAN_KIND_SERVER", status_code="STATUS_CODE_ERROR"}[5m]))
+          /
+          sum(rate(traces_span_metrics_calls_total{service_name="payment", span_kind="SPAN_KIND_SERVER"}[5m]))
+          > 0.05
+        for: 2m
+        labels:
+          service: payment
+          severity: P2
+          cluster: shop
+        annotations:
+          summary: "More than 5% of payment requests are failing"

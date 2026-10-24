@@ -1,6 +1,7 @@
 # itsmlab.yaml - read by the checker (itsmlab) and by the wrappers itsmlab.sh / itsmlab.ps1.
-lab: 3                                   # the lab this repository is currently submitting
-baselines: {}                            # from Lab 2 on: per earlier lab, "student" or "checkpoint"
+lab: 4                                   # the lab this repository is currently submitting
+baselines:
+  lab3: student                          # reuse this repository's Lab 3 implementation
 repository: "BorysStelmaszyk/itsm-2026"             # your public GitHub repository, e.g. "jkowalski/itsm-svcdesk"
 login: BorysStelmaszyk                   # profile used by kb-index and the Lab 3 checker
 submissions_repo: swasik/itsm-2026-submissions

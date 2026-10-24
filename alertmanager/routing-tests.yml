@@ -1,0 +1,20 @@
+# ai-generated: 90% - Codex wrote route and inhibition cases matching the repository's alert labels
+routes:
+  - labels: {alertname: CheckoutErrorRate, service: checkout, severity: P1, cluster: shop}
+    receivers: [pager]
+  - labels: {alertname: CheckoutLatencyHigh, service: checkout, severity: P1, cluster: shop}
+    receivers: [pager]
+  - labels: {alertname: PaymentErrorRate, service: payment, severity: P2, cluster: shop}
+    receivers: [chat]
+  - labels: {alertname: KbSearchAvailabilityBurnFast, service: svcdesk, slo: availability, severity: P1}
+    receivers: [pager]
+  - labels: {alertname: KbSearchAvailabilityBurnSlow, service: svcdesk, slo: availability, severity: P2}
+    receivers: [chat]
+
+inhibitions:
+  - source: {alertname: CheckoutErrorRate, service: checkout, severity: P1, cluster: shop}
+    target: {alertname: PaymentErrorRate, service: payment, severity: P2, cluster: shop}
+    inhibited: true
+  - source: {alertname: CheckoutErrorRate, service: checkout, severity: P1, cluster: shop}
+    target: {alertname: PaymentErrorRate, service: payment, severity: P2, cluster: other}
+    inhibited: false

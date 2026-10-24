@@ -1,0 +1,40 @@
+{
+  "investigator": {
+    "agent": "OpenAI Codex",
+    "model": "gpt-6.1-sol",
+    "mcp_server": "read-only Prometheus HTTP API for the course snapshot",
+    "transcript": "ai-rca/second/transcript.md"
+  },
+  "hypotheses": [
+    {
+      "id": "S1",
+      "hypothesis": "The incident was caused by `adFailure`: ad server errors appeared during the fault window while the healthy baseline had none.",
+      "component": "ad",
+      "predicts": "sum(rate(traces_span_metrics_calls_total{service_name=\"ad\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[5m])) / sum(rate(traces_span_metrics_calls_total{service_name=\"ad\",span_kind=\"SPAN_KIND_SERVER\"}[5m])) > 0.02",
+      "at": "2026-10-12T05:06:30Z",
+      "result": true,
+      "verdict": "correct",
+      "evidence": "The error ratio was about 4.76% at 05:06:30Z and the comparison returned nothing at the 04:56:00Z baseline."
+    },
+    {
+      "id": "S2",
+      "hypothesis": "The latency-and-load fault was `intlShippingSlowdown`: shipping p99 exceeded 5 seconds and checkout p99 rose above 2 seconds.",
+      "component": "shipping",
+      "predicts": "histogram_quantile(0.99, sum by (le) (rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"shipping\",span_kind=\"SPAN_KIND_SERVER\"}[5m]))) > 5000 and on() histogram_quantile(0.99, sum by (le) (rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\"}[5m]))) > 2000",
+      "at": "2026-10-12T05:06:30Z",
+      "result": true,
+      "verdict": "correct",
+      "evidence": "Shipping p99 was approximately 8.1 s and checkout p99 approximately 8.8 s. The combined comparison was false on the healthy baseline."
+    },
+    {
+      "id": "S3",
+      "hypothesis": "The resource fault was `emailMemoryLeak`: email container memory was more than 40% above its value ten minutes earlier, while recommendation memory stayed near baseline.",
+      "component": "email",
+      "predicts": "sum(container_memory_usage_total_bytes{container_name=\"email\"}) / sum(container_memory_usage_total_bytes{container_name=\"email\"} offset 10m) > 1.4 unless on() sum(container_memory_usage_total_bytes{container_name=\"recommendation\"}) / sum(container_memory_usage_total_bytes{container_name=\"recommendation\"} offset 10m) > 1.2",
+      "at": "2026-10-12T05:06:30Z",
+      "result": true,
+      "verdict": "correct",
+      "evidence": "Email memory was 1.448 times its ten-minute-earlier value while recommendation was only 1.020. The email comparison was false at the healthy baseline."
+    }
+  ]
+}
