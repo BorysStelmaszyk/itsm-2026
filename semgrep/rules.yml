@@ -1,0 +1,32 @@
+# ai-generated: 100% - Codex wrote two svcdesk review guards and validated their positive and negative fixtures
+rules:
+  - id: svcdesk-review-dynamic-ticket-sql
+    languages: [python]
+    severity: WARNING
+    message: >-
+      Review interpolated SQL in TicketStore. Only fixed SQL fragments may be
+      interpolated; ticket identifiers and filter values must use bound parameters.
+    metadata:
+      category: security
+      technology: [sqlite, svcdesk]
+      confidence: MEDIUM
+      purpose: review-guard
+    patterns:
+      - pattern-inside: |
+          class TicketStore:
+              ...
+      - pattern: $CONNECTION.execute(f"...", ...)
+
+  - id: svcdesk-review-test-clock-switch
+    languages: [python]
+    severity: INFO
+    message: >-
+      Review the svcdesk test-clock switch. Client-provided X-Test-Clock changes
+      SLA timestamps when enabled; keep its default disabled and enable it only
+      in the course/test deployment.
+    metadata:
+      category: security
+      technology: [svcdesk]
+      confidence: HIGH
+      purpose: review-guard
+    pattern: os.getenv("SVCDESK_TEST_CLOCK", ...)

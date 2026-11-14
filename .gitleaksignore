@@ -1,0 +1,8 @@
+# ai-generated: 100% - Claude Code (Opus 5.5) wrote this file from the course's Lab 5 design (CI-SPEC.md is its public part); the lecturer reviews it
+# .gitleaksignore - findings the secrets gate may ignore, one gitleaks fingerprint per line (`dir` mode:
+# <file>:<rule id>:<line>, as the gate's log prints it). The ignore-policy job enforces CI-SPEC.md P-06: directly above
+# every entry, '#' lines of your own giving the reason, at least 20 characters in total. Leave the blank line below.
+
+# k8s/evidence.json records Helm's checksum/secret annotation: a SHA-256 rollout checksum,
+# not a credential. Keep the Lab 3 evidence unchanged; ignore only this exact location.
+k8s/evidence.json:generic-api-key:8066
