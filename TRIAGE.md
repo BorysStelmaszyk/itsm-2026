@@ -1,6 +1,6 @@
 ---
 lab5_triage:
-  image: ghcr.io/borysstelmaszyk/itsm-2026@sha256:00d0a4e5499363cd636a9e6225612812e9dd2b35feba52cbf1f1cf2f480715e9
+  image: ghcr.io/borysstelmaszyk/itsm-2026@sha256:46f423b347da9c8785c608f416927980cf3ee943a55a431da1fbe11be82a4ffb
   sarif_receipt: 372
 ---
 <!-- ai-generated: 100% - Codex drafted decisions from inspected code and local scanner output; CI evidence is pending -->
