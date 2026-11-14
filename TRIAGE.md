@@ -1,14 +1,15 @@
 ---
 lab5_triage:
   image: ghcr.io/borysstelmaszyk/itsm-2026@sha256:00d0a4e5499363cd636a9e6225612812e9dd2b35feba52cbf1f1cf2f480715e9
-  sarif_receipt: null
+  sarif_receipt: 372
 ---
 <!-- ai-generated: 100% - Codex drafted decisions from inspected code and local scanner output; CI evidence is pending -->
 # Triage
 
-Status: local preparation. The image digest and SARIF receipt will be recorded only after the
-main workflow publishes its attestations and the course bot receipts the unchanged canary SARIF.
-The table will then be reconciled against every finding on our own code in that captured SARIF.
+The image digest is from the successful `main` image job. The unchanged canary SARIF was
+captured in `bakeoff/sarif/` and submitted for the course receipt in issue #372. The table
+covers the three distinct Semgrep rules reported outside `lab5-canary/`, plus the local
+gitleaks ignore and the two service-specific review guards.
 
 | Tool | Rule | Decision | Reason |
 |---|---|---|---|
@@ -28,6 +29,24 @@ currently configured. Local scans are preparation evidence, not the attested can
 
 ## Bake-off
 
-Pending the canary run, SARIF receipt and revealed labels. The final comparison must use those
-captured files and their actual TP, FP, FN, precision, recall and F1; the published practice set
-cannot substitute for this measurement. No final bakeoff.json has been fabricated.
+The matrix counts nine labelled defects in the canary set, using only the unchanged SARIF files
+receipted in issue #372 and the subsequently revealed labels. I would keep Trivy as a gate for
+dependency manifests and the built image: it found 3 defects, with 1 false positive and 6 false
+negatives (precision 0.7500, recall 0.3333, F1 0.4615). I would also keep gitleaks as a secret
+gate because a real credential is costly to publish, while investigating each alert before any
+ignore. On this set gitleaks has 2 true positives, 1 false positive and 7 false negatives
+(precision 0.6667, recall 0.2222, F1 0.3333). Those two gates are complementary: a dependency
+pin and a hard-coded credential need different detectors.
+
+Semgrep has the largest recall here: 4 true positives, 2 false positives and 5 false negatives
+(precision 0.6667, recall 0.4444, F1 0.5333). I would keep it reporting rather than blocking:
+its two unmatched findings show that a broad code rule still needs human review of context.
+Grype and OSV-Scanner each found the two vulnerable dependency defects with no unmatched
+findings (precision 1.0000, recall 0.2222, F1 0.3636 for each). Their clean precision does not
+make them general code or secret detectors. I would retain both as independent reporting
+cross-checks and promote a finding to a gate only after testing how often they alert incorrectly
+on the live service. The false negatives across tools show why passing one scanner cannot certify
+the whole repository. These are measurements on deliberately seeded defects; such examples are
+easier for detectors than naturally occurring faults, so the observed recall is an upper bound
+for real work rather than a performance promise. There is no true-negative cell because the
+labelled unit is a defect, not every line of harmless code.

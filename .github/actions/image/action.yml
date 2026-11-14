@@ -148,6 +148,21 @@ runs:
         push-to-registry: true
         create-storage-record: false
 
+    - name: Store image provenance in the repository (main only)
+      if: github.ref == 'refs/heads/main'
+      uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+      with:
+        subject-name: ${{ steps.prep.outputs.name }}
+        subject-digest: ${{ steps.push.outputs.digest }}
+
+    - name: Store image SBOM in the repository (main only)
+      if: github.ref == 'refs/heads/main'
+      uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+      with:
+        subject-name: ${{ steps.prep.outputs.name }}
+        subject-digest: ${{ steps.push.outputs.digest }}
+        sbom-path: ${{ runner.temp }}/image/sbom.spdx.json
+
     - name: Log out of GHCR (main only)
       if: always() && github.ref == 'refs/heads/main'
       shell: bash
